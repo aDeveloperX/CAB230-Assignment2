@@ -3,6 +3,10 @@ var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
+const swaggerUI = require("swagger-ui-express");
+
+yaml = require("yamljs");
+swaggerDocument = yaml.load("./docs/swagger.yaml");
 
 const options = require("./knexfile");
 const knex = require("knex")(options);
@@ -30,6 +34,7 @@ app.use((req, res, next) => {
   req.db = knex;
   next();
 });
+app.use("/docs", swaggerUI.serve, swaggerUI.setup(swaggerDocument));
 app.use("/", indexRouter);
 app.use("/user", usersRouter);
 app.use("/stocks", stockRouter);
