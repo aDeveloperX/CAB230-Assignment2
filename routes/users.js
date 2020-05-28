@@ -4,7 +4,7 @@ var router = express.Router();
 //register function
 router.post("/register", function (req, res, next) {
   if (req.body.email === "" || req.body.password === "") {
-    res.json({
+    res.status(400).json({
       error: true,
       message: "Request body incomplete - email and password needed",
     });
@@ -20,21 +20,17 @@ router.post("/register", function (req, res, next) {
             .db("users")
             .insert(req.body)
             .then(
-              res.json({
+              res.status(201).json({
                 success: true,
                 message: "User created",
               })
             );
         } else {
-          res.json({
+          res.status(409).json({
             error: true,
             message: "User already exists!",
           });
         }
-      })
-      .catch((err) => {
-        console.log(err);
-        res.json({ Error: true, Message: "hello" });
       });
   }
 });
@@ -42,7 +38,7 @@ router.post("/register", function (req, res, next) {
 //login function
 router.post("/login", function (req, res, next) {
   if (req.body.email === "" || req.body.password === "") {
-    res.json({
+    res.status(400).json({
       error: true,
       message: "Request body invalid - email and password are required",
     });
@@ -54,21 +50,17 @@ router.post("/login", function (req, res, next) {
       .then((rows) => {
         //if the username already exists
         if (rows.length === 0 || req.body.password !== rows[0].password) {
-          res.json({
+          res.status(401).json({
             error: true,
             message: "Incorrect email or password",
           });
         } else {
-          res.json({
+          res.status(200).json({
             token: "afakejsonwebtoken",
             token_type: "Bearer",
             expires: 86400,
           });
         }
-      })
-      .catch((err) => {
-        console.log(err);
-        res.json({ Error: true, Message: "hello" });
       });
   }
 });

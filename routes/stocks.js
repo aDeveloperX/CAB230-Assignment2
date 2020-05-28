@@ -11,7 +11,7 @@ router.get("/symbols", function (req, res, next) {
       .select("name", "symbol", "industry")
       .distinct()
       .then((rows) => {
-        res.json(rows);
+        res.status(200).json(rows);
       })
       .catch((err) => {
         console.log(err);
@@ -26,7 +26,7 @@ router.get("/symbols", function (req, res, next) {
           .distinct()
           .then((rows) => {
             rows.length === 0
-              ? res.json({
+              ? res.status(404).json({
                   error: true,
                   message: "Industry sector not found",
                 })
@@ -36,7 +36,7 @@ router.get("/symbols", function (req, res, next) {
             console.log(err);
             res.json({ Error: true, Message: "hell2" });
           })
-      : res.json({
+      : res.status(400).json({
           error: true,
           message: "Invalid query parameter: only 'industry' is permitted",
         });
@@ -50,15 +50,11 @@ router.get("/:symbol", function (req, res, next) {
     .where("symbol", "=", req.params.symbol)
     .then((rows) => {
       rows.length === 0
-        ? res.json({
+        ? res.status(404).json({
             error: true,
             message: "No entry for symbol in stocks database",
           })
-        : res.json(rows[0]);
-    })
-    .catch((err) => {
-      console.log(err);
-      res.json({ Error: true, Message: "hell2" });
+        : res.status(200).json(rows[0]);
     });
 });
 
