@@ -1,6 +1,9 @@
 var express = require("express");
 var router = express.Router();
+var bcrypt = require("bcrypt");
+var jwt = require("jsonwebtoken");
 
+const secretKey = "secret key";
 //register function
 router.post("/register", function (req, res, next) {
   if (req.body.email === "" || req.body.password === "") {
@@ -14,17 +17,21 @@ router.post("/register", function (req, res, next) {
       .select("*")
       .where("email", "=", req.body.email)
       .then((rows) => {
-        //if the username already exists
+        //if the username doesn't exists
         if (rows.length === 0) {
+          const saltRounds = 10;
+          const hash = bcrypt.hashSync(req.body.password, saltRounds);
+          console.log(hash);
           req
             .db("users")
-            .insert(req.body)
+            .insert({ email: req.body.email, hash: hash })
             .then(
               res.status(201).json({
                 success: true,
                 message: "User created",
               })
-            );
+            )
+            .catch();
         } else {
           res.status(409).json({
             error: true,
@@ -34,6 +41,13 @@ router.post("/register", function (req, res, next) {
       });
   }
 });
+
+const generateJWT = (email) => {
+  const expires_in = 60 * 60 * 24;
+  const exp = Math.floor(Date.now() / 1000) + expires_in;
+  const token = jwt.sign({ email, exp }, secretKey);
+  return { token: token, expires_in: expires_in };
+};
 
 //login function
 router.post("/login", function (req, res, next) {
@@ -48,17 +62,30 @@ router.post("/login", function (req, res, next) {
       .select("*")
       .where("email", "=", req.body.email)
       .then((rows) => {
-        //if the username already exists
-        if (rows.length === 0 || req.body.password !== rows[0].password) {
+        //if the username exists
+        if (rows.length !== 0) {
+          bcrypt.compare(req.body.password, rows[0].hash, function (
+            err,
+            response
+          ) {
+            if (response) {
+              const jwtObj = generateJWT(req.body.email);
+              res.status(200).json({
+                token: jwtObj.token,
+                token_type: "Bearer",
+                expires: jwtObj.expires_in,
+              });
+            } else {
+              res.status(401).json({
+                error: true,
+                message: "Incorrect email or password",
+              });
+            }
+          });
+        } else {
           res.status(401).json({
             error: true,
             message: "Incorrect email or password",
-          });
-        } else {
-          res.status(200).json({
-            token: "afakejsonwebtoken",
-            token_type: "Bearer",
-            expires: 86400,
           });
         }
       });
