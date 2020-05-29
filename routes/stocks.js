@@ -13,7 +13,6 @@ const getAllStocks = (req, res) => {
       res.status(200).json(rows);
     })
     .catch((err) => {
-      console.log(err);
       res.json({ Error: true, Message: "hello" });
     });
 };
@@ -23,7 +22,7 @@ const getStocksByIndustry = (req, res) => {
     ? req.db
         .from("stocks")
         .select("name", "symbol", "industry")
-        .where("industry", "like", req.query.industry + "%")
+        .where("industry", "like", "%" + req.query.industry + "%")
         .distinct()
         .then((rows) => {
           rows.length === 0
@@ -31,10 +30,9 @@ const getStocksByIndustry = (req, res) => {
                 error: true,
                 message: "Industry sector not found",
               })
-            : res.json(rows);
+            : res.status(200).json(rows);
         })
         .catch((err) => {
-          console.log(err);
           res.json({ Error: true, Message: "hell2" });
         })
     : res.status(400).json({
@@ -44,18 +42,26 @@ const getStocksByIndustry = (req, res) => {
 };
 
 const getStockBySymbol = (req, res) => {
-  req.db
-    .from("stocks")
-    .select("*")
-    .where("symbol", "=", req.params.symbol)
-    .then((rows) => {
-      rows.length === 0
-        ? res.status(404).json({
-            error: true,
-            message: "No entry for symbol in stocks database",
-          })
-        : res.status(200).json(rows[0]);
+  if (Object.keys(req.query).length === 0) {
+    req.db
+      .from("stocks")
+      .select("*")
+      .where("symbol", "=", req.params.symbol)
+      .then((rows) => {
+        rows.length === 0
+          ? res.status(404).json({
+              error: true,
+              message: "No entry for symbol in stocks database",
+            })
+          : res.status(200).json(rows[0]);
+      });
+  } else {
+    res.status(400).json({
+      error: true,
+      message:
+        "Date parameters only available on authenticated route /stocks/authed",
     });
+  }
 };
 
 const getAuthedStockDetails = (req, res) => {
@@ -75,21 +81,29 @@ const getAuthedStockDetails = (req, res) => {
 };
 
 const getAuthedStockWithDate = (req, res) => {
-  req.db
-    .from("stocks")
-    .select("*")
-    .where("symbol", "=", req.params.symbol)
-    .where("timestamp", ">", req.query.from)
-    .where("timestamp", "<=", req.query.to)
-    .then((rows) => {
-      rows.length === 0
-        ? res.status(404).json({
-            error: true,
-            message:
-              "No entries available for query symbol for supplied date range",
-          })
-        : res.status(200).json(rows);
+  if (req.query.from && req.query.to && Object.keys(req.query).length === 2) {
+    req.db
+      .from("stocks")
+      .select("*")
+      .where("symbol", "=", req.params.symbol)
+      .where("timestamp", ">", req.query.from)
+      .where("timestamp", "<=", req.query.to)
+      .then((rows) => {
+        rows.length === 0
+          ? res.status(404).json({
+              error: true,
+              message:
+                "No entries available for query symbol for supplied date range",
+            })
+          : res.status(200).json(rows);
+      });
+  } else {
+    res.status(400).json({
+      error: true,
+      message:
+        "Parameters allowed are 'from' and 'to', example: /stocks/authed/AAL?from=2020-03-15",
     });
+  }
 };
 
 const getStockDetails = (req, res) => {

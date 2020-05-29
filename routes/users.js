@@ -6,7 +6,12 @@ var jwt = require("jsonwebtoken");
 const secretKey = "secret key";
 //register function
 router.post("/register", function (req, res, next) {
-  if (req.body.email === "" || req.body.password === "") {
+  if (
+    !req.body.email ||
+    !req.body.password ||
+    req.body.email === "" ||
+    req.body.password === ""
+  ) {
     res.status(400).json({
       error: true,
       message: "Request body incomplete - email and password needed",
@@ -30,8 +35,7 @@ router.post("/register", function (req, res, next) {
                 success: true,
                 message: "User created",
               })
-            )
-            .catch();
+            );
         } else {
           res.status(409).json({
             error: true,
@@ -51,7 +55,12 @@ const generateJWT = (email) => {
 
 //login function
 router.post("/login", function (req, res, next) {
-  if (req.body.email === "" || req.body.password === "") {
+  if (
+    !req.body.email ||
+    !req.body.password ||
+    req.body.email === "" ||
+    req.body.password === ""
+  ) {
     res.status(400).json({
       error: true,
       message: "Request body invalid - email and password are required",
@@ -71,9 +80,9 @@ router.post("/login", function (req, res, next) {
             if (response) {
               const jwtObj = generateJWT(req.body.email);
               res.status(200).json({
-                token: jwtObj.token,
                 token_type: "Bearer",
-                expires: jwtObj.expires_in,
+                token: jwtObj.token,
+                expires_in: jwtObj.expires_in,
               });
             } else {
               res.status(401).json({

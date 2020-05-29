@@ -4,6 +4,7 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 const swaggerUI = require("swagger-ui-express");
+var cors = require("cors");
 
 yaml = require("yamljs");
 swaggerDocument = yaml.load("./docs/swagger.yaml");
@@ -19,7 +20,7 @@ var stockRouter = require("./routes/stocks");
 //const swaggerDocument = require("./docs/swaggerpet.json");
 
 var app = express();
-
+app.use(cors());
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
