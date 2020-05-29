@@ -5,7 +5,73 @@ var jwt = require("jsonwebtoken");
 
 const secretKey = "secret key";
 //register function
+
+const createUsers = (req, res) => {
+  req.db
+    .from("users")
+    .select("*")
+    .where("email", "=", req.body.email)
+    .then((rows) => {
+      //if the username doesn't exists
+      if (rows.length === 0) {
+        const saltRounds = 10;
+        const hash = bcrypt.hashSync(req.body.password, saltRounds);
+        console.log(hash);
+        req
+          .db("users")
+          .insert({ email: req.body.email, hash: hash })
+          .then(
+            res.status(201).json({
+              success: true,
+              message: "User created",
+            })
+          );
+      } else {
+        res.status(409).json({
+          error: true,
+          message: "User already exists!",
+        });
+      }
+    });
+};
+
+const registerUsers = (req, res) => {
+  req.db
+    .from("users")
+    .select("*")
+    .where("email", "=", req.body.email)
+    .then((rows) => {
+      //if the username exists
+      if (rows.length !== 0) {
+        bcrypt.compare(req.body.password, rows[0].hash, function (
+          err,
+          response
+        ) {
+          if (response) {
+            const jwtObj = generateJWT(req.body.email);
+            res.status(200).json({
+              token_type: "Bearer",
+              token: jwtObj.token,
+              expires_in: jwtObj.expires_in,
+            });
+          } else {
+            res.status(401).json({
+              error: true,
+              message: "Incorrect email or password",
+            });
+          }
+        });
+      } else {
+        res.status(401).json({
+          error: true,
+          message: "Incorrect email or password",
+        });
+      }
+    });
+};
+
 router.post("/register", function (req, res, next) {
+  //check if the request is valid
   if (
     !req.body.email ||
     !req.body.password ||
@@ -17,32 +83,7 @@ router.post("/register", function (req, res, next) {
       message: "Request body incomplete - email and password needed",
     });
   } else {
-    req.db
-      .from("users")
-      .select("*")
-      .where("email", "=", req.body.email)
-      .then((rows) => {
-        //if the username doesn't exists
-        if (rows.length === 0) {
-          const saltRounds = 10;
-          const hash = bcrypt.hashSync(req.body.password, saltRounds);
-          console.log(hash);
-          req
-            .db("users")
-            .insert({ email: req.body.email, hash: hash })
-            .then(
-              res.status(201).json({
-                success: true,
-                message: "User created",
-              })
-            );
-        } else {
-          res.status(409).json({
-            error: true,
-            message: "User already exists!",
-          });
-        }
-      });
+    createUsers(req, res);
   }
 });
 
@@ -55,6 +96,7 @@ const generateJWT = (email) => {
 
 //login function
 router.post("/login", function (req, res, next) {
+  //check if the request is valid
   if (
     !req.body.email ||
     !req.body.password ||
@@ -66,38 +108,7 @@ router.post("/login", function (req, res, next) {
       message: "Request body invalid - email and password are required",
     });
   } else {
-    req.db
-      .from("users")
-      .select("*")
-      .where("email", "=", req.body.email)
-      .then((rows) => {
-        //if the username exists
-        if (rows.length !== 0) {
-          bcrypt.compare(req.body.password, rows[0].hash, function (
-            err,
-            response
-          ) {
-            if (response) {
-              const jwtObj = generateJWT(req.body.email);
-              res.status(200).json({
-                token_type: "Bearer",
-                token: jwtObj.token,
-                expires_in: jwtObj.expires_in,
-              });
-            } else {
-              res.status(401).json({
-                error: true,
-                message: "Incorrect email or password",
-              });
-            }
-          });
-        } else {
-          res.status(401).json({
-            error: true,
-            message: "Incorrect email or password",
-          });
-        }
-      });
+    registerUsers(req, res);
   }
 });
 

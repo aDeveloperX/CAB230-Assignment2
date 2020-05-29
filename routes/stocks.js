@@ -119,7 +119,6 @@ const getStockDetails = (req, res) => {
   }
   try {
     const decoded = jwt.verify(token, secretKey);
-
     //if the token has expired
     if (decoded.exp > Date.now()) {
       res.status(403).json({
@@ -136,10 +135,6 @@ const getStockDetails = (req, res) => {
     }
   } catch (e) {
     //the token is not valid
-    res.status(403).json({
-      error: true,
-      message: e.message,
-    });
   }
 };
 
