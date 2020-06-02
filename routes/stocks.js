@@ -97,6 +97,36 @@ const getAuthedStockWithDate = (req, res) => {
             })
           : res.status(200).json(rows);
       });
+  } else if (req.query.from && Object.keys(req.query).length === 1) {
+    req.db
+      .from("stocks")
+      .select("*")
+      .where("symbol", "=", req.params.symbol)
+      .where("timestamp", ">", req.query.from)
+      .then((rows) => {
+        rows.length === 0
+          ? res.status(404).json({
+              error: true,
+              message:
+                "No entries available for query symbol for supplied date range",
+            })
+          : res.status(200).json(rows);
+      });
+  } else if (req.query.to && Object.keys(req.query).length === 1) {
+    req.db
+      .from("stocks")
+      .select("*")
+      .where("symbol", "=", req.params.symbol)
+      .where("timestamp", "<=", req.query.to)
+      .then((rows) => {
+        rows.length === 0
+          ? res.status(404).json({
+              error: true,
+              message:
+                "No entries available for query symbol for supplied date range",
+            })
+          : res.status(200).json(rows);
+      });
   } else {
     res.status(400).json({
       error: true,
@@ -134,7 +164,7 @@ const getStockDetails = (req, res) => {
       }
     }
   } catch (e) {
-    //the token is not valid
+    //the token is invalid
   }
 };
 

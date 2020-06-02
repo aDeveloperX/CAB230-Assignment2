@@ -13,7 +13,7 @@ swaggerDocument = yaml.load("./docs/swagger.yaml");
 const options = require("./knexfile");
 const knex = require("knex")(options);
 
-var indexRouter = require("./routes/index");
+//var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 var stockRouter = require("./routes/stocks");
 
@@ -37,10 +37,11 @@ app.use((req, res, next) => {
   req.db = knex;
   next();
 });
-app.use("/docs", swaggerUI.serve, swaggerUI.setup(swaggerDocument));
-app.use("/", indexRouter);
+
 app.use("/user", usersRouter);
 app.use("/stocks", stockRouter);
+app.use("/", swaggerUI.serve, swaggerUI.setup(swaggerDocument));
+//app.use("/", indexRouter);
 
 // catch 404 and forward to error handler
 
