@@ -4,6 +4,7 @@ var jwt = require("jsonwebtoken");
 
 const secretKey = "secret key";
 
+//get all stocks
 const getAllStocks = (req, res) => {
   req.db
     .from("stocks")
@@ -13,10 +14,11 @@ const getAllStocks = (req, res) => {
       res.status(200).json(rows);
     })
     .catch((err) => {
-      res.json({ Error: true, Message: "hello" });
+      res.json({ Error: true, Message: "Something is wrong" });
     });
 };
 
+//search stocks by industry
 const getStocksByIndustry = (req, res) => {
   req.query.industry
     ? req.db
@@ -33,7 +35,7 @@ const getStocksByIndustry = (req, res) => {
             : res.status(200).json(rows);
         })
         .catch((err) => {
-          res.json({ Error: true, Message: "hell2" });
+          res.json({ Error: true, Message: "Something is wrong" });
         })
     : res.status(400).json({
         error: true,
@@ -41,6 +43,7 @@ const getStocksByIndustry = (req, res) => {
       });
 };
 
+//get a stock by its symbol
 const getStockBySymbol = (req, res) => {
   if (Object.keys(req.query).length === 0) {
     req.db
@@ -81,6 +84,7 @@ const getAuthedStockDetails = (req, res) => {
 };
 
 const getAuthedStockWithDate = (req, res) => {
+  //have and only have 2 queries which are from and to
   if (req.query.from && req.query.to && Object.keys(req.query).length === 2) {
     req.db
       .from("stocks")
@@ -97,6 +101,7 @@ const getAuthedStockWithDate = (req, res) => {
             })
           : res.status(200).json(rows);
       });
+    //have only 1 query passed in which is from
   } else if (req.query.from && Object.keys(req.query).length === 1) {
     req.db
       .from("stocks")
@@ -112,6 +117,7 @@ const getAuthedStockWithDate = (req, res) => {
             })
           : res.status(200).json(rows);
       });
+    //have only 1 query passed in which is to
   } else if (req.query.to && Object.keys(req.query).length === 1) {
     req.db
       .from("stocks")
@@ -127,6 +133,7 @@ const getAuthedStockWithDate = (req, res) => {
             })
           : res.status(200).json(rows);
       });
+    //invalid queries passed in
   } else {
     res.status(400).json({
       error: true,
@@ -139,6 +146,7 @@ const getAuthedStockWithDate = (req, res) => {
 const getStockDetails = (req, res) => {
   const authorization = req.headers.authorization;
   let token = null;
+  //split the token out
   if (authorization && authorization.split(" ").length === 2) {
     token = authorization.split(" ")[1];
   } else {
